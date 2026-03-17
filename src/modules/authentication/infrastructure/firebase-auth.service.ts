@@ -1,5 +1,7 @@
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import { manageFirebaseError } from '@modules/firebase/domain/firebase.error';
+import { COLLECTIONS } from '@config/collections.routes';
 import type { AuthRepository } from '../domain/auth.repository';
 import type {
   SignUpPayload,
@@ -16,9 +18,21 @@ class FirebaseAuthService implements AuthRepository {
         data.password,
       );
 
+      // Guardar datos del usuario en Firestore
+      await firestore()
+        .collection(COLLECTIONS.USERS)
+        .doc(userCredential.user.uid)
+        .set({
+          name: data.name,
+          email: data.email,
+          createdAt: firestore.Timestamp.now(),
+        });
+
       return {
         user: {
+          uid: userCredential.user.uid,
           email: userCredential.user.email!,
+          name: data.name,
         },
       };
     } catch (error) {
@@ -33,9 +47,19 @@ class FirebaseAuthService implements AuthRepository {
         data.password,
       );
 
+      // Obtener datos del usuario desde Firestore
+      const userDoc = await firestore()
+        .collection(COLLECTIONS.USERS)
+        .doc(userCredential.user.uid)
+        .get();
+
+      const userData = userDoc.data();
+
       return {
         user: {
+          uid: userCredential.user.uid,
           email: userCredential.user.email!,
+          name: userData?.name,
         },
       };
     } catch (error) {
@@ -52,13 +76,28 @@ class FirebaseAuthService implements AuthRepository {
     }
   }
 
-  async getCurrentUser(): Promise<{ email: string } | Error> {
+  async getCurrentUser(): Promise<
+    { uid: string; email: string; name?: string } | Error
+  > {
     try {
       const user = auth().currentUser;
       if (!user) {
         return new Error('No hay usuario autenticado');
       }
-      return { email: user.email! };
+
+      // Obtener datos del usuario desde Firestore
+      const userDoc = await firestore()
+        .collection(COLLECTIONS.USERS)
+        .doc(user.uid)
+        .get();
+
+      const userData = userDoc.data();
+
+      return {
+        uid: user.uid,
+        email: user.email!,
+        name: userData?.name,
+      };
     } catch (error) {
       return manageFirebaseError(error);
     }

@@ -1,8 +1,11 @@
 export interface UserEntity {
+  uid: string;
   email: string;
+  name?: string;
 }
 
 export interface SignUpPayload {
+  name: string;
   email: string;
   password: string;
 }

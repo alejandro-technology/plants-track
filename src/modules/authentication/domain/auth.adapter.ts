@@ -9,6 +9,7 @@ import { RegisterFormData, SignInFormData } from './auth.scheme';
 
 export function signUpPayloadAdapter(form: RegisterFormData): SignUpPayload {
   return {
+    name: form.name,
     email: form.email,
     password: form.password,
   };

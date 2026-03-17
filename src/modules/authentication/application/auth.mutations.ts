@@ -45,3 +45,17 @@ export function useSigninMutation() {
     },
   });
 }
+
+/**
+ * Hook de mutación para cerrar sesión
+ */
+export function useSignoutMutation() {
+  return useMutation({
+    mutationFn: async () => {
+      const result = await authService.signout();
+      if (result instanceof Error) {
+        throw result;
+      }
+    },
+  });
+}
